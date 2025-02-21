@@ -1,0 +1,103 @@
+.button-click {
+  width: max-content;
+  background: white;
+  box-shadow: 0px 13px 19px 0 rgba(0, 0, 0, 0.07);
+  height: 80px;
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 12px;
+}
+.btn-danger.button-click {
+  background: rgb(207, 3, 3);
+}
+
+th,
+td {
+  font-size: 12px;
+  font-weight: normal;
+  border: none !important;
+  border-color: transparent;
+  padding: 10px !important;
+}
+td input {
+  font-size: 12px !important;
+  height: 30px !important;
+}
+/* Full screen container for POS */
+.pos-container {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  padding: 1rem;
+  overflow: auto;
+}
+
+/* Scrollable list container */
+.pos-list-scroll {
+  padding: 10px;
+  /* min-height: 40vh;
+  max-height: 70vh; Adjust based on your UI needs */
+  overflow-y: auto;
+  background: white;
+  box-shadow: 0px 13px 19px 0 rgba(0, 0, 0, 0.07);
+  border-radius: 10px;
+}
+/* filepath: /d:/soori-projects/soori-crm - Copy/src/Pages/POS/Posui/index.css */
+.numpad-button {
+  background: white;
+  box-shadow: 0px 13px 19px 0 rgba(0, 0, 0, 0.07);
+
+  border-radius: 0.375rem;
+  font-size: 1.2rem;
+  padding: 0.75rem 0;
+  transition: background-color 0.2s ease;
+}
+.footer-wrapper {
+  box-shadow: 0px 13px 19px 0 rgba(0, 0, 0, 0.07);
+  border-radius: 10px;
+}
+
+.numpad-button:hover {
+  background-color: #e2e6ea;
+}
+
+.modal-content {
+  border-radius: 0.5rem;
+}
+
+.modal-header {
+  border-bottom: none;
+}
+
+.modal-footer {
+  border-top: none;
+}
+
+.pay-section {
+  display: flex;
+  gap: 10px;
+  height: 50px;
+}
+
+.form-wrapper {
+  /* background: white; */
+  /* box-shadow: 0px 13px 19px 0 rgba(0, 0, 0, 0.07); */
+}
+.form-wrapper .form-label {
+  font-size: 12px;
+  margin: 0;
+}
+body {
+  height: 100vh;
+}
+#root {
+  height: 100vh;
+}
+
+.total-wrapper {
+  border-radius: 10px;
+  box-shadow: 0px 13px 19px 0 rgba(0, 0, 0, 0.07);
+}

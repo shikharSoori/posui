@@ -1,0 +1,76 @@
+.sidebar {
+  border: 1px solid #ddd;
+  height: 80%;
+}
+
+.sidebar ::-webkit-scrollbar {
+  display: none;
+}
+
+.logout-btn {
+  border: none;
+  background: var(--blue-primary);
+  color: white;
+  border-radius: 10px;
+}
+
+.ps-submenu-expand-icon.css-viw5ch {
+  display: none !important;
+}
+
+.sidebar-section-title {
+  color: rgba(36, 34, 32, 0.4);
+  font-feature-settings: "clig" off, "liga" off;
+  font-size: 0.6875rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.5rem; /* 218.182% */
+  letter-spacing: 0.025rem;
+  text-transform: uppercase;
+  color: var(--blue-primary);
+}
+
+.ps-menu-button.ps-active {
+  color: var(--blue-primary) !important;
+}
+
+.ps-submenu-content.ps-open .ps-menu-button.ps-active {
+  color: var(--blue-primary);
+}
+
+.collapse-btn {
+  height: 40px;
+  width: 40px;
+  border: none;
+  background-color: white;
+  align-items: center;
+  color: #008eb0;
+  transition: transform 0.2s ease-in-out;
+}
+
+.collapse-btn:disabled {
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.collapse-btn:focus {
+  outline: none;
+}
+
+.collapse-btn:hover {
+  transform: scale(1.1);
+
+}
+
+.sidebar-header {
+  padding: 10px;
+  height: 60px;
+}
+.sidebar-header img {
+  max-width: 100%;
+  height: auto;
+}
+
+.css-dip3t8 {
+  z-index: 0 !important;
+}/*# sourceMappingURL=sidebar.css.map */
