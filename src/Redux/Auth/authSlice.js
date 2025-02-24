@@ -44,6 +44,7 @@ export const authSlice = createSlice({
       const userPermissions = permissions?.map((permission) => {
         return permission?.codeName;
       });
+      setCookie("loggedinUserbranch", action.payload.branch.id);
       setCookie("accessToken", action.payload.access, {
         "max-age": 1800,
       });

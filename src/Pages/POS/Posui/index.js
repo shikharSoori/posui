@@ -13,7 +13,13 @@ import { useEffect, useRef, useState } from "react";
 import "./index.css";
 import { jsPDF } from "jspdf";
 import { useDispatch, useSelector } from "react-redux";
-import { getProduct } from "../Redux/thunk";
+import { createInvoice, getProduct } from "../Redux/thunk";
+import {
+  errorFunction,
+  successFunction,
+} from "../../../Components/Alert/Alert";
+import getCookie from "../../../Utils/Cookies/getCookie";
+import Daybook from "./Daybook";
 
 export default function POSInterface() {
   const [quantity, setQuantity] = useState("");
@@ -34,7 +40,9 @@ export default function POSInterface() {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [invoiceSearchQuery, setInvoiceSearchQuery] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-
+  console.log(selectedInvoice);
+  const loggedinUserbranch = getCookie("loggedinUserbranch");
+  console.log(loggedinUserbranch);
   const generateBillNumber = () => {
     const randomNum = Math.floor(10000 + Math.random() * 90000);
     return `SIRT-MC-${randomNum}`;
@@ -168,175 +176,6 @@ export default function POSInterface() {
       total: 200,
     },
   ];
-  const filteredProducts = dummyProducts.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.itemCode.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const recalcTotal = (qty, rate, discount) => qty * rate - qty * discount;
-
-  useEffect(() => {
-    const handleWindowFocus = () => {
-      if (barcodeInputRef.current) {
-        barcodeInputRef.current.focus();
-      }
-    };
-
-    window.addEventListener("focus", handleWindowFocus);
-
-    // Initial focus when component is mounted
-    handleWindowFocus();
-
-    return () => {
-      window.removeEventListener("focus", handleWindowFocus);
-    };
-  }, []);
-  const handleBarcodeKeyDown = (e) => {
-    if (e.key === "Enter") {
-      const product = dummyProducts.find(
-        (p) =>
-          p.barcode === itemNo || p.itemCode === itemNo || p.itemNo === itemNo
-      );
-      if (product) {
-        const qty = quantity ? parseFloat(quantity) : 1;
-        const r = rate ? parseFloat(rate) : product.rate;
-        const disc = discountPercentage
-          ? r * qty * (parseFloat(discountPercentage) / 100)
-          : discount
-          ? parseFloat(discount)
-          : product.discount;
-
-        const newProduct = {
-          ...product,
-          quantity: qty,
-          rate: r,
-          discount: disc,
-          total: recalcTotal(qty, r, disc),
-        };
-
-        setListItems((prevItems) => {
-          const existingItem = prevItems.find(
-            (item) => item.barcode === product.barcode
-          );
-          if (existingItem) {
-            const newQty = existingItem.quantity + qty;
-            return prevItems.map((item) =>
-              item.barcode === product.barcode
-                ? {
-                    ...item,
-                    quantity: newQty,
-                    total: recalcTotal(newQty, item.rate, item.discount),
-                  }
-                : item
-            );
-          }
-          return [...prevItems, newProduct];
-        });
-      }
-      // Clear input fields after processing
-      setItemNo("");
-      setQuantity("");
-      setRate("");
-      setDiscount("");
-      setDiscountPercentage("");
-    }
-  };
-
-  const handleIncreaseQuantity = (barcode) => {
-    setListItems((prevItems) =>
-      prevItems.map((item) =>
-        item.barcode === barcode
-          ? {
-              ...item,
-              quantity: item.quantity + 1,
-              total: recalcTotal(item.quantity + 1, item.rate, item.discount),
-            }
-          : item
-      )
-    );
-  };
-
-  const handleDecreaseQuantity = (barcode) => {
-    setListItems((prevItems) =>
-      prevItems.reduce((acc, item) => {
-        if (item.barcode === barcode) {
-          const newQty = item.quantity - 1;
-          if (newQty > 0) {
-            acc.push({
-              ...item,
-              quantity: newQty,
-              total: recalcTotal(newQty, item.rate, item.discount),
-            });
-          }
-        } else {
-          acc.push(item);
-        }
-        return acc;
-      }, [])
-    );
-  };
-
-  const handleRateChange = (barcode, newRate) => {
-    const rateVal = parseFloat(newRate) || 0;
-    setListItems((prevItems) =>
-      prevItems.map((item) =>
-        item.barcode === barcode
-          ? {
-              ...item,
-              rate: rateVal,
-              total: recalcTotal(item.quantity, rateVal, item.discount),
-            }
-          : item
-      )
-    );
-  };
-
-  const handleDiscountChange = (barcode, newDiscount) => {
-    const discVal = parseFloat(newDiscount) || 0;
-    setListItems((prevItems) =>
-      prevItems.map((item) =>
-        item.barcode === barcode
-          ? {
-              ...item,
-              discount: discVal,
-              total: recalcTotal(item.quantity, item.rate, discVal),
-            }
-          : item
-      )
-    );
-  };
-
-  const handleNumpadClick = (key) => {
-    if (key === "⌫") {
-      if (focusedField === "itemNo") setItemNo((prev) => prev.slice(0, -1));
-      else if (focusedField === "quantity")
-        setQuantity((prev) => prev.slice(0, -1));
-      else if (focusedField === "rate") setRate((prev) => prev.slice(0, -1));
-      else if (focusedField === "discount")
-        setDiscount((prev) => prev.slice(0, -1));
-      else if (focusedField === "discountPercentage")
-        setDiscountPercentage((prev) => prev.slice(0, -1));
-    } else if (key === "↵") {
-      // Trigger Enter key behavior for barcode input as an example.
-      if (focusedField === "itemNo") handleBarcodeKeyDown({ key: "Enter" });
-    } else {
-      if (focusedField === "itemNo") setItemNo((prev) => prev + key);
-      else if (focusedField === "quantity") setQuantity((prev) => prev + key);
-      else if (focusedField === "rate") setRate((prev) => prev + key);
-      else if (focusedField === "discount") setDiscount((prev) => prev + key);
-      else if (focusedField === "discountPercentage")
-        setDiscountPercentage((prev) => prev + key);
-    }
-  };
-
-  // Toggle selection on checkbox click.
-  const toggleSelection = (barcode) => {
-    setSelectedItems((prev) =>
-      prev.includes(barcode)
-        ? prev.filter((b) => b !== barcode)
-        : [...prev, barcode]
-    );
-  };
 
   // Remove all selected items.
   const removeSelectedItems = () => {
@@ -365,17 +204,19 @@ export default function POSInterface() {
       total: recalcTotal(qty, r, disc),
     };
     setListItems((prevItems) => {
-      const existingItem = prevItems.find(
-        (item) => item.barcode === product.barcode
-      );
+      const existingItem = prevItems.find((item) => item.code === product.code);
       if (existingItem) {
         const newQty = existingItem.quantity + qty;
         return prevItems.map((item) =>
-          item.barcode === product.barcode
+          item.code === product.code
             ? {
                 ...item,
                 quantity: newQty,
-                total: recalcTotal(newQty, item.rate, item.discount),
+                total: recalcTotal(
+                  newQty,
+                  item.rate ? item.rate : 0,
+                  item.discount ? item.discount : 0
+                ),
               }
             : item
         );
@@ -389,8 +230,10 @@ export default function POSInterface() {
   // Calculate totals for footer.
   const totals = listItems.reduce(
     (acc, item) => {
-      const gross = item.quantity * item.rate;
-      const discTotal = item.quantity * item.discount;
+      const rateValue = item?.rate ? item.rate : 0;
+      const discountValue = item?.discount ? item.discount : 0;
+      const gross = item.quantity * rateValue;
+      const discTotal = item.quantity * discountValue;
       return {
         quantity: acc.quantity + item.quantity,
         gross: acc.gross + gross,
@@ -478,15 +321,220 @@ export default function POSInterface() {
   };
   const removeItem = (barcode) => {
     setListItems((prevItems) =>
-      prevItems.filter((item) => item.barcode !== barcode)
+      prevItems.filter((item) => item.code !== barcode)
     );
   };
   const dispatch = useDispatch();
   const products = useSelector((state) => state.pos.products);
+  const filteredProducts = products?.filter(
+    (product) =>
+      String(product.id).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product?.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product?.serialNo.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const recalcTotal = (qty, rate, discount) => qty * rate - qty * discount;
+
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      if (barcodeInputRef.current) {
+        barcodeInputRef.current.focus();
+      }
+    };
+
+    window.addEventListener("focus", handleWindowFocus);
+
+    // Initial focus when component is mounted
+    handleWindowFocus();
+
+    return () => {
+      window.removeEventListener("focus", handleWindowFocus);
+    };
+  }, []);
   
+  const handleBarcodeKeyDown = (e) => {
+    if (e.key === "Enter") {
+      // Search using id, code, or serialNo (convert id to a string for comparison)
+      const product = products.find(
+        (p) =>
+          String(p.id) === itemNo || p.code === itemNo || p.serialNo === itemNo
+      );
+      if (!product) {
+        errorFunction("Product not found!");
+        return;
+      }
+      if (!product.code) {
+        errorFunction("Product code is not available for this product!");
+        return;
+      }
+
+      // Calculate quantity and rate (using product.rate if available,
+      // otherwise defaulting to 0)
+      const qty = quantity ? parseFloat(quantity) : 1;
+      const r = rate ? parseFloat(rate) : product.rate || 0;
+
+      // Prepare new product object using the new keys.
+      const newProduct = {
+        ...product,
+        quantity: qty,
+        rate: r,
+        total: qty * r,
+      };
+
+      // Update listItems. If a product with the same id exists, increment its quantity.
+      setListItems((prevItems) => {
+        const existingItem = prevItems.find((item) => item.id === product.id);
+        if (existingItem) {
+          const newQty = existingItem.quantity + qty;
+          return prevItems.map((item) =>
+            item.id === product.id
+              ? { ...item, quantity: newQty, total: newQty * (item.rate || 0) }
+              : item
+          );
+        }
+        return [...prevItems, newProduct];
+      });
+
+      // Clear input fields after processing
+      setItemNo("");
+      setQuantity("");
+      setRate("");
+    }
+  };
+
+  const handleIncreaseQuantity = (barcode) => {
+    setListItems((prevItems) =>
+      prevItems.map((item) =>
+        item.code === barcode
+          ? {
+              ...item,
+              quantity: item.quantity + 1,
+              total: recalcTotal(
+                item.quantity + 1,
+                item.rate ? item.rate : 0,
+                item.discount ? item.discount : 0
+              ),
+            }
+          : item
+      )
+    );
+  };
+
+  const handleDecreaseQuantity = (barcode) => {
+    setListItems((prevItems) =>
+      prevItems.reduce((acc, item) => {
+        if (item.code === barcode) {
+          const newQty = item.quantity - 1;
+          if (newQty > 0) {
+            acc.push({
+              ...item,
+              quantity: newQty,
+              total: recalcTotal(
+                newQty,
+                item.rate ? item.rate : 0,
+                item.discount ? item.discount : 0
+              ),
+            });
+          }
+        } else {
+          acc.push(item);
+        }
+        return acc;
+      }, [])
+    );
+  };
+
+  const handleRateChange = (barcode, newRate) => {
+    const rateVal = parseFloat(newRate) || 0;
+    setListItems((prevItems) =>
+      prevItems.map((item) =>
+        item.code === barcode
+          ? {
+              ...item,
+              rate: rateVal,
+              total: recalcTotal(
+                item.quantity,
+                rateVal,
+                item.discount ? item.discount : 0
+              ),
+            }
+          : item
+      )
+    );
+  };
+
+  const handleDiscountChange = (barcode, newDiscount) => {
+    const discVal = parseFloat(newDiscount) || 0;
+    setListItems((prevItems) =>
+      prevItems.map((item) =>
+        item.code === barcode
+          ? {
+              ...item,
+              discount: discVal,
+              total: recalcTotal(
+                item.quantity,
+                item.rate ? item.rate : 0,
+                discVal
+              ),
+            }
+          : item
+      )
+    );
+  };
+
+  const handleNumpadClick = (key) => {
+    if (key === "⌫") {
+      if (focusedField === "itemNo") setItemNo((prev) => prev.slice(0, -1));
+      else if (focusedField === "quantity")
+        setQuantity((prev) => prev.slice(0, -1));
+      else if (focusedField === "rate") setRate((prev) => prev.slice(0, -1));
+      else if (focusedField === "discount")
+        setDiscount((prev) => prev.slice(0, -1));
+      else if (focusedField === "discountPercentage")
+        setDiscountPercentage((prev) => prev.slice(0, -1));
+    } else if (key === "↵") {
+      // Trigger Enter key behavior for barcode input as an example.
+      if (focusedField === "itemNo") handleBarcodeKeyDown({ key: "Enter" });
+    } else {
+      if (focusedField === "itemNo") setItemNo((prev) => prev + key);
+      else if (focusedField === "quantity") setQuantity((prev) => prev + key);
+      else if (focusedField === "rate") setRate((prev) => prev + key);
+      else if (focusedField === "discount") setDiscount((prev) => prev + key);
+      else if (focusedField === "discountPercentage")
+        setDiscountPercentage((prev) => prev + key);
+    }
+  };
   useEffect(() => {
     dispatch(getProduct(10));
   }, [dispatch]);
+  const submitInvoice = async () => {
+    const payload = {
+      saleInvoiceDetails: listItems.map((item) => {
+        return {
+          actualQuantity: item.quantity.toString(),
+          rate: item.rate,
+          amount: item.total,
+          product: item.id, // assuming item.id corresponds to the product id.
+          unit: item.baseUnit.id,
+        };
+      }),
+
+      voucherDate: new Date().toISOString().split("T")[0], // format yyyy-mm-dd
+      isDirectSale: true,
+      branch: loggedinUserbranch,
+    };
+
+    await dispatch(createInvoice(payload))
+      .unwrap()
+      .then(() => {
+        successFunction("Invoice submitted successfully!");
+
+        setShowPrintModal(true);
+      })
+      .catch((error) => {
+        errorFunction("Invoice submission failed: " + error.message);
+      });
+  };
   return (
     <div
       className="container-fluid pos-container"
@@ -512,7 +560,7 @@ export default function POSInterface() {
                   }}
                 >
                   <Search size={16} className="mb-1" />
-                  <small>Search Invoice</small>
+                  <small>Day Book</small>
                 </button>
                 <button
                   onClick={() => setShowSearchModal(true)}
@@ -563,25 +611,45 @@ export default function POSInterface() {
                 {listItems.length > 0 ? (
                   listItems.map((item, index) => (
                     <tr key={index}>
-                      <td>{item.itemCode}</td>
+                      <td>{item.code}</td>
                       <td>{item.name}</td>
-                      <td>{item.hsCode}</td>
+                      <td>{item.harmonicCode}</td>
                       <td>{item.color}</td>
                       <td>{item.size}</td>
                       <td>
-                        <div className="btn-group">
+                        <div className="input-group">
                           <button
                             className="btn btn-sm btn-danger"
-                            onClick={() => handleDecreaseQuantity(item.barcode)}
+                            onClick={() => handleDecreaseQuantity(item.code)}
                           >
                             -
                           </button>
-                          <span className="btn btn-sm btn-light">
-                            {item.quantity}
-                          </span>
+                          <input
+                            type="number"
+                            className="form-control text-center"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const newQty = parseFloat(e.target.value) || 0;
+                              setListItems((prevItems) =>
+                                prevItems.map((i) =>
+                                  i.code === item.code
+                                    ? {
+                                        ...i,
+                                        quantity: newQty,
+                                        total: recalcTotal(
+                                          newQty,
+                                          i.rate,
+                                          i.discount
+                                        ),
+                                      }
+                                    : i
+                                )
+                              );
+                            }}
+                          />
                           <button
                             className="btn btn-sm btn-success"
-                            onClick={() => handleIncreaseQuantity(item.barcode)}
+                            onClick={() => handleIncreaseQuantity(item.code)}
                           >
                             +
                           </button>
@@ -590,9 +658,9 @@ export default function POSInterface() {
                       <td>
                         <input
                           type="number"
-                          value={item.rate}
+                          value={item.rate ? item.rate : 0}
                           onChange={(e) =>
-                            handleRateChange(item.barcode, e.target.value)
+                            handleRateChange(item.code, e.target.value)
                           }
                           className="form-control"
                         />
@@ -600,9 +668,9 @@ export default function POSInterface() {
                       <td>
                         <input
                           type="number"
-                          value={item.discount}
+                          value={item.discount ? item.discount : 0}
                           onChange={(e) =>
-                            handleDiscountChange(item.barcode, e.target.value)
+                            handleDiscountChange(item.code, e.target.value)
                           }
                           className="form-control"
                         />
@@ -611,7 +679,7 @@ export default function POSInterface() {
                       <td>
                         <button
                           className="btn text-danger btn-sm"
-                          onClick={() => removeItem(item.barcode)}
+                          onClick={() => removeItem(item.code)}
                         >
                           <Trash2 color="red" size={16} />
                         </button>
@@ -883,16 +951,10 @@ export default function POSInterface() {
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => {
-                      // Payment processing logic...
-                      // setListItems([]);
-                      // setTender("");
-                      // setBillNo(generateBillNumber());
-                      // setShowModal(false);
-                      // Process payment logic...
+                    onClick={async () => {
                       setShowModal(false);
-                      // Open Print Bill Modal instead of clearing cart immediately
-                      setShowPrintModal(true);
+                      await submitInvoice();
+                      // setShowPrintModal(true);
                     }}
                     disabled={tender - totals.total < 0}
                   >
@@ -972,14 +1034,20 @@ export default function POSInterface() {
                   <button
                     type="button"
                     className="btn btn-secondary"
-                    onClick={() => setShowPrintModal(false)}
+                    onClick={() => {
+                      setListItems([]);
+                      setShowPrintModal(false);
+                    }}
                   >
                     Close
                   </button>
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={generatePDF}
+                    onClick={() => {
+                      setListItems([]);
+                      generatePDF();
+                    }}
                   >
                     Print Bill
                   </button>
@@ -1026,11 +1094,8 @@ export default function POSInterface() {
                     <thead>
                       <tr>
                         <th>#</th>
-                        <th>Item Code</th>
+                        <th> Code</th>
                         <th>Name</th>
-                        <th>Rate</th>
-                        <th>Color</th>
-                        <th>Size</th>
                       </tr>
                     </thead>
                     <tbody className="">
@@ -1046,11 +1111,8 @@ export default function POSInterface() {
                           className="mb-2 spaceUnder rounded border-success"
                         >
                           <td className="pl-4">{index + 1}</td>
-                          <td>{product.itemCode}</td>
+                          <td>{product.code}</td>
                           <td>{product.name}</td>
-                          <td>{product.rate}</td>
-                          <td>{product.color}</td>
-                          <td>{product.size}</td>
                         </tr>
                       ))}
                       {filteredProducts.length === 0 && (
@@ -1093,14 +1155,14 @@ export default function POSInterface() {
                   {/* <button type="button" className="btn-close btn-close-white" onClick={() => setShowInvoiceModal(false)}></button> */}
                 </div>
                 <div className="modal-body p-4">
-                  <input
+                  {/* <input
                     type="text"
                     className="form-control mb-3"
                     placeholder="Search Invoice by Bill No..."
                     value={invoiceSearchQuery}
                     onChange={(e) => setInvoiceSearchQuery(e.target.value)}
-                  />
-                  <table className="table">
+                  /> */}
+                  {/* <table className="table">
                     <thead>
                       <tr>
                         <th>#</th>
@@ -1137,7 +1199,13 @@ export default function POSInterface() {
                           </tr>
                         ))}
                     </tbody>
-                  </table>
+                  </table> */}
+                  <Daybook
+                    selectedInvoice={selectedInvoice}
+                    handleModalKeyDown={handleModalKeyDown}
+                    setSelectedInvoice={setSelectedInvoice}
+                    setShowInvoiceModal={setShowInvoiceModal}
+                  />
                 </div>
                 <div className="modal-footer bg-light">
                   <button
@@ -1184,7 +1252,7 @@ export default function POSInterface() {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedInvoice.items.map((item, idx) => (
+                      {selectedInvoice?.map((item, idx) => (
                         <tr key={idx}>
                           <td>{idx + 1}</td>
                           <td>{item.itemCode}</td>

@@ -14,10 +14,13 @@
   background: rgb(207, 3, 3);
 }
 
+th {
+  font-weight: 500;
+}
 th,
 td {
   font-size: 12px;
-  font-weight: normal;
+  /* font-weight: normal; */
   border: none !important;
   border-color: transparent;
   padding: 10px !important;

@@ -17,18 +17,18 @@ const Layout = ({ children }) => {
   // );
   return (
     <>
-      <div id="layout-wrapper" className="d-flex">
-        {/* <SidebarData /> */}
-        {/* <div
+      {/* <div id="layout-wrapper" className="d-flex"> */}
+      {/* <SidebarData /> */}
+      {/* <div
           className={`${collapsed ? "main-content collapsed" : "main-content"}`}
         > */}
-          <div className="page-content">
-            <div className="container-fluid p-0" ref={parent}>
-              {children}
-            </div>
-          </div>
-        {/* </div> */}
-      </div>
+      {/* <div className="page-content">
+            <div className="container-fluid p-0" ref={parent}> */}
+      {children}
+      {/* </div>
+          </div> */}
+      {/* </div> */}
+      {/* </div> */}
     </>
   );
 };

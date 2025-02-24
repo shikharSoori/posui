@@ -14,8 +14,8 @@ const axiosInstance = axios.create({
   },
   appType: 1,
   deviceType: 2,
-  message: MESSAGE,
-  signature: generateSignature(),
+  // message: MESSAGE,
+  // signature: generateSignature(),
 });
 
 export const publicAxiosInstance = axios.create({
@@ -49,12 +49,17 @@ axiosInstance.interceptors.request.use(
     } else if (window.navigator.onLine) {
       // get access token from cookie
       config.headers = {
-        Authorization: getCookie("accessToken") ? `Bearer ${getCookie("accessToken")}` : "",
-        Message: MESSAGE,
-        Signature: generateSignature(),
+        Authorization: getCookie("accessToken")
+          ? `Bearer ${getCookie("accessToken")}`
+          : "",
+        // Message: MESSAGE,
+        // Signature: generateSignature(),
       };
 
-      config.baseURL = localStorage.getItem("url") !== null ? `http://${localStorage.getItem("url")}` : process.env.REACT_APP_BASE_URL;
+      config.baseURL =
+        localStorage.getItem("url") !== null
+          ? `http://${localStorage.getItem("url")}`
+          : process.env.REACT_APP_BASE_URL;
 
       config.signal = abortController.signal;
       config.params = config.params || {};
@@ -65,16 +70,16 @@ axiosInstance.interceptors.request.use(
           // Handle FormData
           config.data.append("appType", "1");
           config.data.append("deviceType", "2");
-          config.data.append("message", MESSAGE);
-          config.data.append("signature", generateSignature());
+          // config.data.append("message", MESSAGE);
+          // config.data.append("signature", generateSignature());
         } else if (typeof config.data === "object") {
           // Handle regular objects
           config.data = {
             ...config.data,
             appType: 1,
             deviceType: 2,
-            message: MESSAGE,
-            signature: generateSignature(),
+            // message: MESSAGE,
+            // signature: generateSignature(),
           };
         } else if (typeof config.data === "string") {
           // Handle JSON strings
@@ -83,8 +88,8 @@ axiosInstance.interceptors.request.use(
             ...bodyData,
             appType: 1,
             deviceType: 2,
-            message: MESSAGE,
-            signature: generateSignature(),
+            // message: MESSAGE,
+            // signature: generateSignature(),
           };
         }
       }
@@ -105,13 +110,19 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
 
     //when refresh token is also not valid
-    if (error.response.status === 401 && originalRequest.url === `api/v1/user-app/generate-access-token`) {
+    if (
+      error.response.status === 401 &&
+      originalRequest.url === `api/v1/user-app/generate-access-token`
+    ) {
       store.dispatch(authError());
       return errorFunction(`Refresh Token Expired. Please Login.`);
     }
 
     //accessing new access token from refresh token
-    else if (error.response?.data.code === "token_not_valid" && !originalRequest._retry) {
+    else if (
+      error.response?.data.code === "token_not_valid" &&
+      !originalRequest._retry
+    ) {
       //call for refresh token
       originalRequest._retry = true;
       // Check if another refresh token request is in progress
@@ -131,7 +142,10 @@ axiosInstance.interceptors.response.use(
         // Call for refresh token
         const body = JSON.stringify({ refresh: getCookie("refreshToken") });
         deleteCookie("accessToken");
-        const response = await axiosInstance.post(`api/v1/user-app/generate-access-token`, body);
+        const response = await axiosInstance.post(
+          `api/v1/user-app/generate-access-token`,
+          body
+        );
 
         if (response.status === 200) {
           const newAccessToken = response.data.access;
@@ -164,7 +178,10 @@ axiosInstance.interceptors.response.use(
       errorFunction("Page Not Found !!!!!");
     }
     //unauthorized user
-    else if (error.response?.status === 401 || error.message === "Invalid token specified") {
+    else if (
+      error.response?.status === 401 ||
+      error.message === "Invalid token specified"
+    ) {
       store.dispatch(authError());
     }
 

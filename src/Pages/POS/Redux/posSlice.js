@@ -1,5 +1,5 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
-import { getProduct } from "./thunk";
+import { createInvoice, getDayBook, getProduct } from "./thunk";
 const initialState = {
   products: [],
   edit: false,
@@ -9,6 +9,8 @@ const initialState = {
   previous: null,
   loading: false,
   loadingProduct: false,
+  invoices: [],
+  invoice: null,
 };
 
 export const posSlice = createSlice({
@@ -29,6 +31,29 @@ export const posSlice = createSlice({
     });
     builder.addCase(getProduct.rejected, (state) => {
       state.loadingProduct = false;
+      state.edit = false;
+    });
+    builder.addCase(createInvoice.pending, (state) => {
+      state.loadingInvoice = true;
+    });
+    builder.addCase(createInvoice.fulfilled, (state, { payload }) => {
+      state.loadingInvoice = false;
+      state.edit = false;
+    });
+    builder.addCase(createInvoice.rejected, (state) => {
+      state.loadingInvoice = false;
+      state.edit = false;
+    });
+    builder.addCase(getDayBook.pending, (state) => {
+      state.loading = true;
+    });
+    builder.addCase(getDayBook.fulfilled, (state, { payload }) => {
+      state.invoices = payload.data;
+      state.loading = false;
+      state.edit = false;
+    });
+    builder.addCase(getDayBook.rejected, (state) => {
+      state.loading = false;
       state.edit = false;
     });
   },
