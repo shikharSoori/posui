@@ -1,0 +1,83 @@
+.login-wrapper {
+  display: flex;
+  height: 100vh;
+
+  .content-wrapper {
+    flex-grow: 1;
+    background-color: #f0f2f5;
+    padding: 3.75rem;
+
+    .login-container {
+      width: 40%;
+      .welcome-text-small {
+        font-weight: 400;
+      }
+      .login-btn {
+        border: 1px #5a5a5a solid;
+      }
+      .login-btn:focus,
+      .login-btn:hover {
+        background-color: var(--blue-primary);
+        color: white;
+        border: 1px var(--blue-primary) solid;
+      }
+    }
+    .remember-forget-container {
+      .form-switch {
+        .form-check-label {
+          font-size: 0.875rem;
+        }
+        .form-check-input:focus {
+          box-shadow: none;
+        }
+      }
+      a {
+        font-size: 0.875rem;
+        color: rgb(185, 30, 30);
+      }
+    }
+    .developer-content {
+      p {
+        font-size: 0.75rem;
+      }
+    }
+  }
+
+  .image-wrapper {
+    background-repeat: no-repeat;
+    overflow: hidden;
+    height: 100vh;
+    position: relative;
+    img {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: auto;
+      z-index: -1;
+    }
+    .image-text {
+      z-index: 1;
+      position: absolute;
+      bottom: 0;
+      padding: 20px;
+      margin: 60px;
+      margin-bottom: 40px;
+      border-radius: 0.625rem;
+      background: rgba(255, 242, 242, 0);
+      backdrop-filter: blur(18px);
+      p {
+        color: white;
+        margin: 0;
+      }
+    }
+  }
+}
+.password-field {
+  position: relative;
+}
+.password-field .fa-eye-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 20px;
+}

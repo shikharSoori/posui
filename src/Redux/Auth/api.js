@@ -1,7 +1,7 @@
 import axiosInstance, { publicAxiosInstance } from "../../Utils/axios";
 
 //for login
-export const login = (body) => publicAxiosInstance.post(`api/v1/user-app/login`, body);
+export const login = (body) => publicAxiosInstance.post(`api/v1/auth/login`, body);
 //for logout
 export const logout = (body) => axiosInstance.post(`api/v1/user-app/logout`, body);
 

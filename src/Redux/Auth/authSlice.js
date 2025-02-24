@@ -44,10 +44,10 @@ export const authSlice = createSlice({
       const userPermissions = permissions?.map((permission) => {
         return permission?.codeName;
       });
-      setCookie("accessToken", action.payload.tokens.access, {
+      setCookie("accessToken", action.payload.access, {
         "max-age": 1800,
       });
-      setCookie("refreshToken", action.payload.tokens.refresh, {
+      setCookie("refreshToken", action.payload.refresh, {
         "max-age": 86400, // 24 hours
       });
       state.isAuthenticated = true;
@@ -86,5 +86,12 @@ export const authSlice = createSlice({
 });
 
 const { actions, reducer } = authSlice;
-export const { authError, loginSuccess, logoutSuccess, tokenRefreshSuccess, forgetPassword, resetPassword } = actions;
+export const {
+  authError,
+  loginSuccess,
+  logoutSuccess,
+  tokenRefreshSuccess,
+  forgetPassword,
+  resetPassword,
+} = actions;
 export default reducer;

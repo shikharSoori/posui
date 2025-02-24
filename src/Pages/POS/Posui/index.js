@@ -1,7 +1,19 @@
-import { CreditCard, DeleteIcon, Grid, Percent, Plus, RotateCcw, Search, Trash2, X } from "lucide-react";
+import {
+  CreditCard,
+  DeleteIcon,
+  Grid,
+  Percent,
+  Plus,
+  RotateCcw,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import "./index.css";
 import { jsPDF } from "jspdf";
+import { useDispatch, useSelector } from "react-redux";
+import { getProduct } from "../Redux/thunk";
 
 export default function POSInterface() {
   const [quantity, setQuantity] = useState("");
@@ -157,7 +169,9 @@ export default function POSInterface() {
     },
   ];
   const filteredProducts = dummyProducts.filter(
-    (product) => product.name.toLowerCase().includes(searchQuery.toLowerCase()) || product.itemCode.toLowerCase().includes(searchQuery.toLowerCase())
+    (product) =>
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.itemCode.toLowerCase().includes(searchQuery.toLowerCase())
   );
   const recalcTotal = (qty, rate, discount) => qty * rate - qty * discount;
 
@@ -179,11 +193,18 @@ export default function POSInterface() {
   }, []);
   const handleBarcodeKeyDown = (e) => {
     if (e.key === "Enter") {
-      const product = dummyProducts.find((p) => p.barcode === itemNo || p.itemCode === itemNo || p.itemNo === itemNo);
+      const product = dummyProducts.find(
+        (p) =>
+          p.barcode === itemNo || p.itemCode === itemNo || p.itemNo === itemNo
+      );
       if (product) {
         const qty = quantity ? parseFloat(quantity) : 1;
         const r = rate ? parseFloat(rate) : product.rate;
-        const disc = discountPercentage ? r * qty * (parseFloat(discountPercentage) / 100) : discount ? parseFloat(discount) : product.discount;
+        const disc = discountPercentage
+          ? r * qty * (parseFloat(discountPercentage) / 100)
+          : discount
+          ? parseFloat(discount)
+          : product.discount;
 
         const newProduct = {
           ...product,
@@ -194,10 +215,20 @@ export default function POSInterface() {
         };
 
         setListItems((prevItems) => {
-          const existingItem = prevItems.find((item) => item.barcode === product.barcode);
+          const existingItem = prevItems.find(
+            (item) => item.barcode === product.barcode
+          );
           if (existingItem) {
             const newQty = existingItem.quantity + qty;
-            return prevItems.map((item) => (item.barcode === product.barcode ? { ...item, quantity: newQty, total: recalcTotal(newQty, item.rate, item.discount) } : item));
+            return prevItems.map((item) =>
+              item.barcode === product.barcode
+                ? {
+                    ...item,
+                    quantity: newQty,
+                    total: recalcTotal(newQty, item.rate, item.discount),
+                  }
+                : item
+            );
           }
           return [...prevItems, newProduct];
         });
@@ -213,7 +244,15 @@ export default function POSInterface() {
 
   const handleIncreaseQuantity = (barcode) => {
     setListItems((prevItems) =>
-      prevItems.map((item) => (item.barcode === barcode ? { ...item, quantity: item.quantity + 1, total: recalcTotal(item.quantity + 1, item.rate, item.discount) } : item))
+      prevItems.map((item) =>
+        item.barcode === barcode
+          ? {
+              ...item,
+              quantity: item.quantity + 1,
+              total: recalcTotal(item.quantity + 1, item.rate, item.discount),
+            }
+          : item
+      )
     );
   };
 
@@ -223,7 +262,11 @@ export default function POSInterface() {
         if (item.barcode === barcode) {
           const newQty = item.quantity - 1;
           if (newQty > 0) {
-            acc.push({ ...item, quantity: newQty, total: recalcTotal(newQty, item.rate, item.discount) });
+            acc.push({
+              ...item,
+              quantity: newQty,
+              total: recalcTotal(newQty, item.rate, item.discount),
+            });
           }
         } else {
           acc.push(item);
@@ -235,21 +278,44 @@ export default function POSInterface() {
 
   const handleRateChange = (barcode, newRate) => {
     const rateVal = parseFloat(newRate) || 0;
-    setListItems((prevItems) => prevItems.map((item) => (item.barcode === barcode ? { ...item, rate: rateVal, total: recalcTotal(item.quantity, rateVal, item.discount) } : item)));
+    setListItems((prevItems) =>
+      prevItems.map((item) =>
+        item.barcode === barcode
+          ? {
+              ...item,
+              rate: rateVal,
+              total: recalcTotal(item.quantity, rateVal, item.discount),
+            }
+          : item
+      )
+    );
   };
 
   const handleDiscountChange = (barcode, newDiscount) => {
     const discVal = parseFloat(newDiscount) || 0;
-    setListItems((prevItems) => prevItems.map((item) => (item.barcode === barcode ? { ...item, discount: discVal, total: recalcTotal(item.quantity, item.rate, discVal) } : item)));
+    setListItems((prevItems) =>
+      prevItems.map((item) =>
+        item.barcode === barcode
+          ? {
+              ...item,
+              discount: discVal,
+              total: recalcTotal(item.quantity, item.rate, discVal),
+            }
+          : item
+      )
+    );
   };
 
   const handleNumpadClick = (key) => {
     if (key === "⌫") {
       if (focusedField === "itemNo") setItemNo((prev) => prev.slice(0, -1));
-      else if (focusedField === "quantity") setQuantity((prev) => prev.slice(0, -1));
+      else if (focusedField === "quantity")
+        setQuantity((prev) => prev.slice(0, -1));
       else if (focusedField === "rate") setRate((prev) => prev.slice(0, -1));
-      else if (focusedField === "discount") setDiscount((prev) => prev.slice(0, -1));
-      else if (focusedField === "discountPercentage") setDiscountPercentage((prev) => prev.slice(0, -1));
+      else if (focusedField === "discount")
+        setDiscount((prev) => prev.slice(0, -1));
+      else if (focusedField === "discountPercentage")
+        setDiscountPercentage((prev) => prev.slice(0, -1));
     } else if (key === "↵") {
       // Trigger Enter key behavior for barcode input as an example.
       if (focusedField === "itemNo") handleBarcodeKeyDown({ key: "Enter" });
@@ -258,13 +324,18 @@ export default function POSInterface() {
       else if (focusedField === "quantity") setQuantity((prev) => prev + key);
       else if (focusedField === "rate") setRate((prev) => prev + key);
       else if (focusedField === "discount") setDiscount((prev) => prev + key);
-      else if (focusedField === "discountPercentage") setDiscountPercentage((prev) => prev + key);
+      else if (focusedField === "discountPercentage")
+        setDiscountPercentage((prev) => prev + key);
     }
   };
 
   // Toggle selection on checkbox click.
   const toggleSelection = (barcode) => {
-    setSelectedItems((prev) => (prev.includes(barcode) ? prev.filter((b) => b !== barcode) : [...prev, barcode]));
+    setSelectedItems((prev) =>
+      prev.includes(barcode)
+        ? prev.filter((b) => b !== barcode)
+        : [...prev, barcode]
+    );
   };
 
   // Remove all selected items.
@@ -294,10 +365,20 @@ export default function POSInterface() {
       total: recalcTotal(qty, r, disc),
     };
     setListItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.barcode === product.barcode);
+      const existingItem = prevItems.find(
+        (item) => item.barcode === product.barcode
+      );
       if (existingItem) {
         const newQty = existingItem.quantity + qty;
-        return prevItems.map((item) => (item.barcode === product.barcode ? { ...item, quantity: newQty, total: recalcTotal(newQty, item.rate, item.discount) } : item));
+        return prevItems.map((item) =>
+          item.barcode === product.barcode
+            ? {
+                ...item,
+                quantity: newQty,
+                total: recalcTotal(newQty, item.rate, item.discount),
+              }
+            : item
+        );
       }
       return [...prevItems, newProduct];
     });
@@ -396,10 +477,21 @@ export default function POSInterface() {
     doc.output("dataurlnewwindow");
   };
   const removeItem = (barcode) => {
-    setListItems((prevItems) => prevItems.filter((item) => item.barcode !== barcode));
+    setListItems((prevItems) =>
+      prevItems.filter((item) => item.barcode !== barcode)
+    );
   };
+  const dispatch = useDispatch();
+  const products = useSelector((state) => state.pos.products);
+  
+  useEffect(() => {
+    dispatch(getProduct(10));
+  }, [dispatch]);
   return (
-    <div className="container-fluid pos-container" onKeyDown={handleModalKeyDown}>
+    <div
+      className="container-fluid pos-container"
+      onKeyDown={handleModalKeyDown}
+    >
       {/* Top Buttons */}
 
       {/* Main Content */}
@@ -422,7 +514,10 @@ export default function POSInterface() {
                   <Search size={16} className="mb-1" />
                   <small>Search Invoice</small>
                 </button>
-                <button onClick={() => setShowSearchModal(true)} className="btn  d-flex flex-column align-items-center button-click">
+                <button
+                  onClick={() => setShowSearchModal(true)}
+                  className="btn  d-flex flex-column align-items-center button-click"
+                >
                   <Search size={16} className="mb-1" />
                   <small>Search Item</small>
                 </button>
@@ -438,7 +533,10 @@ export default function POSInterface() {
                   <CreditCard size={16} className="mb-1" />
                   <small>Loyalty Card</small>
                 </button>
-                <button onClick={removeSelectedItems} className="btn btn-danger d-flex flex-column align-items-center button-click">
+                <button
+                  onClick={removeSelectedItems}
+                  className="btn btn-danger d-flex flex-column align-items-center button-click"
+                >
                   <X size={16} className="mb-1" />
                   <small>Remove Items</small>
                 </button>
@@ -472,24 +570,49 @@ export default function POSInterface() {
                       <td>{item.size}</td>
                       <td>
                         <div className="btn-group">
-                          <button className="btn btn-sm btn-danger" onClick={() => handleDecreaseQuantity(item.barcode)}>
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => handleDecreaseQuantity(item.barcode)}
+                          >
                             -
                           </button>
-                          <span className="btn btn-sm btn-light">{item.quantity}</span>
-                          <button className="btn btn-sm btn-success" onClick={() => handleIncreaseQuantity(item.barcode)}>
+                          <span className="btn btn-sm btn-light">
+                            {item.quantity}
+                          </span>
+                          <button
+                            className="btn btn-sm btn-success"
+                            onClick={() => handleIncreaseQuantity(item.barcode)}
+                          >
                             +
                           </button>
                         </div>
                       </td>
                       <td>
-                        <input type="number" value={item.rate} onChange={(e) => handleRateChange(item.barcode, e.target.value)} className="form-control" />
+                        <input
+                          type="number"
+                          value={item.rate}
+                          onChange={(e) =>
+                            handleRateChange(item.barcode, e.target.value)
+                          }
+                          className="form-control"
+                        />
                       </td>
                       <td>
-                        <input type="number" value={item.discount} onChange={(e) => handleDiscountChange(item.barcode, e.target.value)} className="form-control" />
+                        <input
+                          type="number"
+                          value={item.discount}
+                          onChange={(e) =>
+                            handleDiscountChange(item.barcode, e.target.value)
+                          }
+                          className="form-control"
+                        />
                       </td>
                       <td>{item.total}</td>
                       <td>
-                        <button className="btn text-danger btn-sm" onClick={() => removeItem(item.barcode)}>
+                        <button
+                          className="btn text-danger btn-sm"
+                          onClick={() => removeItem(item.barcode)}
+                        >
                           <Trash2 color="red" size={16} />
                         </button>
                       </td>
@@ -507,7 +630,10 @@ export default function POSInterface() {
           </div>
 
           <div className="bg-white py-2 px-4  footer-wrapper mt-2">
-            <div className="form-wrapper  d-flex  mb-2 mt-2" style={{ gap: "10px" }}>
+            <div
+              className="form-wrapper  d-flex  mb-2 mt-2"
+              style={{ gap: "10px" }}
+            >
               <div>
                 <label className="form-label">Barcode / Item No.</label>
                 <input
@@ -566,7 +692,10 @@ export default function POSInterface() {
                 />
               </div>
             </div>
-            <div className="w-100  " style={{ border: "0.4px  dashed #E0E0E0	" }}></div>
+            <div
+              className="w-100  "
+              style={{ border: "0.4px  dashed #E0E0E0	" }}
+            ></div>
             <div className="d-flex w-100  mt-2 justify-content-between">
               <div className="">
                 <div className="mb-2">
@@ -604,10 +733,37 @@ export default function POSInterface() {
         <div className="col-2 d-flex flex-column justify-content-between align-content-between">
           <div className="flex-grow-1 d-flex flex-column justify-content-between align-content-between">
             <div className="mb-2">
-              <div className="" style={{ display: "grid", gridTemplateColumns: " auto auto auto" }}>
-                {["7", "8", "9", "4", "5", "6", "1", "2", "3", "0", ".", "⌫", "↵"].map((key) => (
-                  <div key={key} className={key === "↵ Enter" ? "" : ""} style={{ padding: "5px" }}>
-                    <button className="btn numpad-button w-100" onClick={() => handleNumpadClick(key)}>
+              <div
+                className=""
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: " auto auto auto",
+                }}
+              >
+                {[
+                  "7",
+                  "8",
+                  "9",
+                  "4",
+                  "5",
+                  "6",
+                  "1",
+                  "2",
+                  "3",
+                  "0",
+                  ".",
+                  "⌫",
+                  "↵",
+                ].map((key) => (
+                  <div
+                    key={key}
+                    className={key === "↵ Enter" ? "" : ""}
+                    style={{ padding: "5px" }}
+                  >
+                    <button
+                      className="btn numpad-button w-100"
+                      onClick={() => handleNumpadClick(key)}
+                    >
                       {key}
                     </button>
                   </div>
@@ -639,7 +795,11 @@ export default function POSInterface() {
               <RotateCcw className="me-1" />
               Park
             </button>
-            <button className="btn btn-success w-100" onClick={() => setShowModal(true)} disabled={listItems.length === 0}>
+            <button
+              className="btn btn-success w-100"
+              onClick={() => setShowModal(true)}
+              disabled={listItems.length === 0}
+            >
               Pay
             </button>
           </div>
@@ -649,14 +809,21 @@ export default function POSInterface() {
       {/* Payment Modal */}
       {showModal && (
         <>
-          <div className="modal show fade" style={{ display: "block" }} tabIndex="-1">
+          <div
+            className="modal show fade"
+            style={{ display: "block" }}
+            tabIndex="-1"
+          >
             <div className="modal-dialog modal-dialog-centered modal-lg">
               <div className="modal-content shadow-lg border-0">
                 <div className="modal-header  ">
                   <h5 className="modal-title">Payment</h5>
                   {/* <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)}></button> */}
                 </div>
-                <div className="modal-body p-4" style={{ backgroundColor: "#f7f7f7" }}>
+                <div
+                  className="modal-body p-4"
+                  style={{ backgroundColor: "#f7f7f7" }}
+                >
                   <form>
                     {/* <div className="mb-3">
                       <label className="form-label">Payment Method</label>
@@ -668,24 +835,49 @@ export default function POSInterface() {
                     </div> */}
                     <div className="mb-3">
                       <label className="form-label">Total Billing</label>
-                      <input type="number" className="form-control" value={totals.total} readOnly />
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={totals.total}
+                        readOnly
+                      />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Tender</label>
-                      <input type="number" className="form-control" value={tender} onChange={(e) => setTender(e.target.value)} />
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={tender}
+                        onChange={(e) => setTender(e.target.value)}
+                      />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Return</label>
-                      <input type="number" className="form-control" value={tender - totals.total} readOnly />
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={tender - totals.total}
+                        readOnly
+                      />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Bill No</label>
-                      <input type="text" className="form-control" value={billNo} onChange={(e) => setBillNo(e.target.value)} placeholder="System Generated Bill No" />
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={billNo}
+                        onChange={(e) => setBillNo(e.target.value)}
+                        placeholder="System Generated Bill No"
+                      />
                     </div>
                   </form>
                 </div>
                 <div className="modal-footer bg-light">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowModal(false)}
+                  >
                     Close
                   </button>
                   <button
@@ -715,12 +907,27 @@ export default function POSInterface() {
       )}
       {showPrintModal && (
         <>
-          <div className="modal show fade" style={{ display: "block" }} tabIndex="-1" onKeyDown={handleModalKeyDown}>
-            <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "90mm" }}>
-              <div className="modal-content" style={{ width: "80mm", margin: "auto" }}>
+          <div
+            className="modal show fade"
+            style={{ display: "block" }}
+            tabIndex="-1"
+            onKeyDown={handleModalKeyDown}
+          >
+            <div
+              className="modal-dialog modal-dialog-centered"
+              style={{ maxWidth: "90mm" }}
+            >
+              <div
+                className="modal-content"
+                style={{ width: "80mm", margin: "auto" }}
+              >
                 <div className="modal-header">
                   <h5 className="modal-title">Print Bill</h5>
-                  <button type="button" className="btn-close" onClick={() => setShowPrintModal(false)}></button>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowPrintModal(false)}
+                  ></button>
                 </div>
                 <div className="modal-body">
                   <div style={{ fontSize: "12px", textAlign: "center" }}>
@@ -744,7 +951,9 @@ export default function POSInterface() {
                         {listItems.map((item, index) => (
                           <tr key={index}>
                             <td style={{ textAlign: "left" }}>{item.name}</td>
-                            <td style={{ textAlign: "right" }}>{item.quantity}</td>
+                            <td style={{ textAlign: "right" }}>
+                              {item.quantity}
+                            </td>
                             <td style={{ textAlign: "right" }}>{item.rate}</td>
                             <td style={{ textAlign: "right" }}>{item.total}</td>
                           </tr>
@@ -760,10 +969,18 @@ export default function POSInterface() {
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowPrintModal(false)}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowPrintModal(false)}
+                  >
                     Close
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={generatePDF}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={generatePDF}
+                  >
                     Print Bill
                   </button>
                 </div>
@@ -775,7 +992,11 @@ export default function POSInterface() {
       )}
       {showSearchModal && (
         <>
-          <div className="modal show fade" style={{ display: "block" }} tabIndex="-1">
+          <div
+            className="modal show fade"
+            style={{ display: "block" }}
+            tabIndex="-1"
+          >
             <div className="modal-dialog modal-dialog-centered modal-lg">
               <div className="modal-content shadow-lg border-0">
                 <div className="modal-header bg-white ">
@@ -795,7 +1016,13 @@ export default function POSInterface() {
                       }
                     }}
                   />
-                  <table className="table" style={{ borderCollapse: "separate", borderSpacing: "0 5px" }}>
+                  <table
+                    className="table"
+                    style={{
+                      borderCollapse: "separate",
+                      borderSpacing: "0 5px",
+                    }}
+                  >
                     <thead>
                       <tr>
                         <th>#</th>
@@ -810,7 +1037,11 @@ export default function POSInterface() {
                       {filteredProducts.map((product, index) => (
                         <tr
                           key={index}
-                          style={{ background: "white", boxShadow: "0px 13px 19px 0 rgba(0, 0, 0, 0.07)", cursor: "pointer" }}
+                          style={{
+                            background: "white",
+                            boxShadow: "0px 13px 19px 0 rgba(0, 0, 0, 0.07)",
+                            cursor: "pointer",
+                          }}
                           onClick={() => handleSelectProduct(product)}
                           className="mb-2 spaceUnder rounded border-success"
                         >
@@ -833,7 +1064,11 @@ export default function POSInterface() {
                   </table>
                 </div>
                 <div className="modal-footer bg-light">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowSearchModal(false)}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowSearchModal(false)}
+                  >
                     Close
                   </button>
                 </div>
@@ -845,7 +1080,12 @@ export default function POSInterface() {
       )}
       {showInvoiceModal && (
         <>
-          <div className="modal show fade" style={{ display: "block" }} tabIndex="-1" onKeyDown={handleModalKeyDown}>
+          <div
+            className="modal show fade"
+            style={{ display: "block" }}
+            tabIndex="-1"
+            onKeyDown={handleModalKeyDown}
+          >
             <div className="modal-dialog modal-dialog-centered modal-lg">
               <div className="modal-content shadow-lg border-0">
                 <div className="modal-header bg-white ">
@@ -872,7 +1112,11 @@ export default function POSInterface() {
                     </thead>
                     <tbody>
                       {dummyInvoices
-                        .filter((invoice) => invoice.billNo.toLowerCase().includes(invoiceSearchQuery.toLowerCase()))
+                        .filter((invoice) =>
+                          invoice.billNo
+                            .toLowerCase()
+                            .includes(invoiceSearchQuery.toLowerCase())
+                        )
                         .map((invoice, index) => (
                           <tr key={invoice.id}>
                             <td>{index + 1}</td>
@@ -896,7 +1140,11 @@ export default function POSInterface() {
                   </table>
                 </div>
                 <div className="modal-footer bg-light">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowInvoiceModal(false)}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowInvoiceModal(false)}
+                  >
                     Close
                   </button>
                 </div>
@@ -908,11 +1156,18 @@ export default function POSInterface() {
       )}
       {selectedInvoice && (
         <>
-          <div className="modal show fade" style={{ display: "block" }} tabIndex="-1" onKeyDown={handleModalKeyDown}>
+          <div
+            className="modal show fade"
+            style={{ display: "block" }}
+            tabIndex="-1"
+            onKeyDown={handleModalKeyDown}
+          >
             <div className="modal-dialog modal-dialog-centered modal-lg">
               <div className="modal-content shadow-lg border-0">
                 <div className="modal-header bg-white ">
-                  <h5 className="modal-title">Invoice Details - {selectedInvoice.billNo}</h5>
+                  <h5 className="modal-title">
+                    Invoice Details - {selectedInvoice.billNo}
+                  </h5>
                   {/* <button type="button" className="btn-close btn-close-white" onClick={() => setSelectedInvoice(null)}></button> */}
                 </div>
                 <div className="modal-body p-4">
@@ -944,7 +1199,11 @@ export default function POSInterface() {
                   </table>
                 </div>
                 <div className="modal-footer bg-light">
-                  <button type="button" className="btn btn-secondary" onClick={() => setSelectedInvoice(null)}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setSelectedInvoice(null)}
+                  >
                     Close
                   </button>
                 </div>

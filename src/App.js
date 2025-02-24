@@ -11,6 +11,7 @@ import "./App.css";
 import { Toaster } from "sonner";
 import { useEffect, useRef } from "react";
 import autoAnimate from "@formkit/auto-animate";
+import PrivateRoute from "./Routes/PrivateRoute";
 
 const App = () => {
   const parent = useRef(null);
@@ -19,11 +20,11 @@ const App = () => {
     parent.current && autoAnimate(parent.current);
   }, [parent]);
 
-  // const { isAuthenticated } = useSelector((state) => state?.auth);
+  const { isAuthenticated } = useSelector((state) => state?.auth);
   return (
     <div ref={parent} style={{ overflow: "hidden", height: "100%" }}>
-      {/* {isAuthenticated ? <PrivateRoute /> : <PublicRoute />} */}
-      <PublicRoute />
+      {isAuthenticated ? <PrivateRoute /> : <PublicRoute />}
+      {/* <PublicRoute /> */}
       <Toaster
         position="top-right"
         duration={1500}
